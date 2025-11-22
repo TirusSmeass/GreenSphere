@@ -1,0 +1,2262 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenSphere - Platform Lingkungan Berbasis Komunitas</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #2e7d32;
+            --primary-dark: #1b5e20;
+            --primary-light: #4caf50;
+            --secondary: #ff9800;
+            --background: #f8fdf8;
+            --card: #ffffff;
+            --text: #333333;
+        }
+
+        body {
+            background: var(--background);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* Login Styles */
+        #loginSection {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .login-container {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-logo {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .login-title {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+        }
+
+        .login-subtitle {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+
+        .user-type-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .user-type-btn {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .user-type-btn.active {
+            border-color: var(--primary);
+            background: #e8f5e9;
+            color: var(--primary);
+        }
+
+        .user-type-btn i {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .login-form {
+            text-align: left;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .community-fields {
+            display: none;
+        }
+
+        .community-fields.active {
+            display: block;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Navbar Styles */
+        .navbar {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: none;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .logo i {
+            font-size: 1.8rem;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+
+        .nav-link i {
+            font-size: 1.1rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: white;
+        }
+
+        .user-points {
+            background: var(--secondary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-type-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: none;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .section-header h2 {
+            color: var(--primary);
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--card);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background: #f57c00;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Reward Section Styles */
+        .reward-category {
+            margin-bottom: 3rem;
+        }
+
+        .reward-category h3 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .reward-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .reward-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid var(--primary);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .reward-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .reward-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .reward-points {
+            background: var(--secondary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .reward-description {
+            color: #666;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .reward-benefit {
+            background: #e8f5e9;
+            padding: 0.8rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--primary);
+        }
+
+        .reward-benefit i {
+            margin-right: 0.5rem;
+        }
+
+        /* Calculator Styles */
+        .score-display {
+            font-size: 4rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .result-item {
+            background: #e8f5e9;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        /* Map Styles */
+        #mapContainer {
+            height: 500px;
+            border-radius: 10px;
+            margin-top: 1rem;
+        }
+
+        #leafletMap {
+            height: 100%;
+            border-radius: 10px;
+        }
+
+        /* Challenge Styles */
+        .challenge-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .challenge-card {
+            background: var(--card);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid var(--primary);
+            transition: transform 0.3s ease;
+        }
+
+        .challenge-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .challenge-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .challenge-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .challenge-points {
+            background: var(--secondary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .challenge-status {
+            margin: 1rem 0;
+            padding: 0.5rem;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .status-joined {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-completed {
+            background: #e8f5e8;
+            color: var(--primary);
+        }
+
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            margin: 1rem 0;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+        }
+
+        .upload-area i {
+            font-size: 2rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+
+        .proof-image {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        /* Leaderboard Styles */
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            padding: 1.5rem;
+            background: var(--card);
+            margin-bottom: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .leaderboard-item:hover {
+            transform: translateX(5px);
+        }
+
+        .rank {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-right: 1.5rem;
+            color: var(--primary);
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .rank-1 { color: #ffd700; }
+        .rank-2 { color: #c0c0c0; }
+        .rank-3 { color: #cd7f32; }
+
+        .community-info {
+            flex-grow: 1;
+        }
+
+        .community-info h3 {
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .score {
+            text-align: center;
+        }
+
+        .eco-score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        /* Chatbot Styles */
+        .chat-container {
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            padding: 1.5rem;
+            background: #fafafa;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border-radius: 15px;
+            max-width: 80%;
+            line-height: 1.5;
+        }
+
+        .message.user {
+            background: var(--primary);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.bot {
+            background: #e0e0e0;
+            color: var(--text);
+            border-bottom-left-radius: 5px;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 1rem;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .chat-input input {
+            flex-grow: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            margin-right: 10px;
+            font-size: 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--primary-dark);
+                flex-direction: column;
+                padding: 1rem;
+            }
+
+            .nav-menu.active {
+                display: flex;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .user-points {
+                display: none;
+            }
+
+            .challenge-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .user-info {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .reward-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .visible {
+            display: block !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Section -->
+    <div id="loginSection">
+        <div class="login-container">
+            <div class="login-logo">
+                <i class="fas fa-seedling"></i>
+            </div>
+            <h1 class="login-title">GreenSphere</h1>
+            <p class="login-subtitle">Platform Lingkungan Berbasis Komunitas</p>
+            
+            <div class="user-type-selector">
+                <div class="user-type-btn active" onclick="selectUserType('individu')">
+                    <i class="fas fa-user"></i>
+                    <div>Individu</div>
+                </div>
+                <div class="user-type-btn" onclick="selectUserType('komunitas')">
+                    <i class="fas fa-users"></i>
+                    <div>Komunitas</div>
+                </div>
+            </div>
+
+            <div class="login-form">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="masukkan email anda">
+                </div>
+                
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="masukkan password">
+                </div>
+
+                <!-- Fields for Individu -->
+                <div class="form-group individu-fields">
+                    <label for="individuName">Nama Lengkap</label>
+                    <input type="text" id="individuName" placeholder="nama lengkap">
+                </div>
+
+                <!-- Fields for Komunitas -->
+                <div class="community-fields">
+                    <div class="form-group">
+                        <label for="communityName">Nama Komunitas</label>
+                        <input type="text" id="communityName" placeholder="nama komunitas">
+                    </div>
+                    <div class="form-group">
+                        <label for="communityType">Jenis Komunitas</label>
+                        <select id="communityType">
+                            <option value="sekolah">Sekolah/Kampus</option>
+                            <option value="kelurahan">Kelurahan/Desa</option>
+                            <option value="organisasi">Organisasi Lingkungan</option>
+                            <option value="perusahaan">Perusahaan</option>
+                            <option value="lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="communityMembers">Jumlah Anggota</label>
+                        <input type="number" id="communityMembers" placeholder="perkiraan jumlah anggota">
+                    </div>
+                    <div class="form-group">
+                        <label for="communityLocation">Lokasi</label>
+                        <input type="text" id="communityLocation" placeholder="kota/kabupaten">
+                    </div>
+                </div>
+
+                <button class="login-btn" onclick="login()">
+                    <i class="fas fa-sign-in-alt"></i> Masuk ke GreenSphere
+                </button>
+
+                <div style="margin-top: 1rem; text-align: center;">
+                    <small style="color: #666;">Belum punya akun? Sistem akan membuatkan otomatis</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="logo" onclick="showSection('dashboard')">
+                <i class="fas fa-seedling"></i>
+                <h1>GreenSphere</h1>
+            </div>
+
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <ul class="nav-menu">
+                <li><a class="nav-link active" onclick="showSection('dashboard')">
+                    <i class="fas fa-home"></i>Dashboard
+                </a></li>
+                <li><a class="nav-link" onclick="showSection('calculator')">
+                    <i class="fas fa-calculator"></i>Eco-Score
+                </a></li>
+                <li><a class="nav-link" onclick="showSection('map')">
+                    <i class="fas fa-map-marked-alt"></i>Peta Lingkungan
+                </a></li>
+                <li><a class="nav-link" onclick="showSection('challenges')">
+                    <i class="fas fa-trophy"></i>Eco-Challenge
+                </a></li>
+                <li><a class="nav-link" onclick="showSection('leaderboard')">
+                    <i class="fas fa-medal"></i>Leaderboard
+                </a></li>
+                <li><a class="nav-link" onclick="showSection('chatbot')">
+                    <i class="fas fa-robot"></i>Eco-Mentor
+                </a></li>
+                <li><a class="nav-link" onclick="showSection('recycle')">
+                    <i class="fas fa-recycle"></i>Daur Ulang
+                </a></li>
+            </ul>
+
+            <div class="user-info">
+                <div class="user-type-badge" id="userTypeBadge">
+                    <i class="fas fa-user"></i> Individu
+                </div>
+                <div class="user-points">
+                    <i class="fas fa-coins"></i>
+                    <span id="navPoints">0</span> Points
+                </div>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container" id="mainContainer">
+        <!-- Dashboard -->
+        <div id="dashboard" class="section active">
+            <div class="section-header">
+                <h2>🌱 Selamat Datang di GreenSphere</h2>
+                <p id="welcomeMessage">Platform Komunitas untuk Lingkungan yang Lebih Hijau</p>
+            </div>
+
+            <div class="result-grid">
+                <div class="result-item">
+                    <h3>Eco-Score Anda</h3>
+                    <div class="score-display" id="dashboardScore">0</div>
+                    <p>Skor lingkungan terkini</p>
+                </div>
+                <div class="result-item">
+                    <h3>Total Points</h3>
+                    <div class="score-display" id="dashboardPoints">0</div>
+                    <p>Eco-Points terkumpul</p>
+                </div>
+                <div class="result-item">
+                    <h3>Challenge Selesai</h3>
+                    <div class="score-display" id="dashboardChallenges">0</div>
+                    <p>Challenge berhasil diselesaikan</p>
+                </div>
+                <div class="result-item">
+                    <h3>Plastik Didaur Ulang</h3>
+                    <div class="score-display" id="dashboardRecycled">0</div>
+                    <p>kg</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Aktivitas Terbaru</h3>
+                <div id="recentActivity">
+                    <p>Belum ada aktivitas. Mulai dengan menghitung jejak karbon atau mengikuti challenge!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Eco-Score Calculator -->
+        <div id="calculator" class="section">
+            <div class="section-header">
+                <h2>📊 Kalkulator Eco-Score</h2>
+                <p>Hitung jejak lingkungan dan dapatkan skor keberlanjutan Anda</p>
+            </div>
+
+            <div class="card">
+                <div class="input-group">
+                    <label><i class="fas fa-bolt"></i> Penggunaan Listrik (kWh/bulan)</label>
+                    <input type="number" id="electricity" placeholder="Contoh: 150" value="150">
+                </div>
+                <div class="input-group">
+                    <label><i class="fas fa-car"></i> Jarak Kendaraan (km/bulan)</label>
+                    <input type="number" id="vehicle" placeholder="Contoh: 300" value="300">
+                </div>
+                <div class="input-group">
+                    <label><i class="fas fa-trash"></i> Sampah Plastik (kg/bulan)</label>
+                    <input type="number" id="waste" placeholder="Contoh: 5" value="5">
+                </div>
+                <div class="input-group">
+                    <label><i class="fas fa-tint"></i> Konsumsi Air (m³/bulan)</label>
+                    <input type="number" id="water" placeholder="Contoh: 15" value="15">
+                </div>
+                <button class="btn" onclick="calculateFootprint()">
+                    <i class="fas fa-calculator"></i> Hitung Jejak Karbon
+                </button>
+                
+                <div id="result" class="hidden">
+                    <div class="score-display" id="ecoScore">85</div>
+                    <div class="result-grid">
+                        <div class="result-item">
+                            <h4>Total Jejak Karbon</h4>
+                            <p><strong id="totalFootprint">0</strong> kg CO2/bulan</p>
+                        </div>
+                        <div class="result-item">
+                            <h4>Setara Penanaman Pohon</h4>
+                            <p><strong id="equivalentTrees">0</strong> pohon</p>
+                        </div>
+                        <div class="result-item">
+                            <h4>Points Diperoleh</h4>
+                            <p><strong id="earnedPoints">0</strong> points</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Environmental Map -->
+        <div id="map" class="section">
+            <div class="section-header">
+                <h2>🗺️ Peta Lingkungan GreenSphere</h2>
+                <p>Temukan fasilitas lingkungan terdekat di sekitar Anda</p>
+            </div>
+            <div class="card">
+                <div id="mapContainer">
+                    <div id="leafletMap"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Eco-Challenges -->
+        <div id="challenges" class="section">
+            <div class="section-header">
+                <h2>🏆 Eco-Challenge</h2>
+                <p>Ikuti tantangan, unggah bukti, dan kumpulkan Eco-Points!</p>
+            </div>
+
+            <div class="challenge-grid" id="challengeList">
+                <!-- Challenges will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div id="leaderboard" class="section">
+            <div class="section-header">
+                <h2>🏅 Leaderboard Komunitas Hijau</h2>
+                <p>Lihat peringkat komunitas paling aktif dalam menjaga lingkungan</p>
+            </div>
+            <div class="card">
+                <div id="leaderboardList"></div>
+            </div>
+        </div>
+
+        <!-- AI Chatbot -->
+        <div id="chatbot" class="section">
+            <div class="section-header">
+                <h2>🤖 Eco-Mentor AI</h2>
+                <p>Asisten pintar untuk pertanyaan seputar lingkungan dan keberlanjutan</p>
+            </div>
+            
+            <div class="card">
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message bot">
+                            <strong>Eco-Mentor:</strong> Halo! Saya Eco-Mentor AI. Saya siap membantu Anda dengan tips lingkungan dan keberlanjutan. Apa yang ingin Anda tanyakan?
+                        </div>
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="chatInput" placeholder="Tanya tentang lingkungan..." onkeypress="handleChatInput(event)">
+                        <button class="btn" onclick="sendMessage()">
+                            <i class="fas fa-paper-plane"></i> Kirim
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recycle Program -->
+        <div id="recycle" class="section">
+            <div class="section-header">
+                <h2>🔄 Program Daur Ulang & Reward</h2>
+                <p>Laporkan daur ulang Anda dan tukar points dengan hadiah yang mendukung lingkungan berkelanjutan</p>
+            </div>
+
+            <div class="card">
+                <h3><i class="fas fa-chart-line"></i> Track Daur Ulang Anda</h3>
+                <div class="input-group">
+                    <label>Berat Sampah Plastik (kg):</label>
+                    <input type="number" id="plasticWeight" placeholder="Contoh: 2.5" value="2.5" step="0.1" min="0">
+                </div>
+                <div class="input-group">
+                    <label>Jenis Plastik:</label>
+                    <select id="plasticType">
+                        <option value="PET">PET (Botol minuman)</option>
+                        <option value="HDPE">HDPE (Botol sabun)</option>
+                        <option value="PVC">PVC (Kemasan makanan)</option>
+                        <option value="LDPE">LDPE (Plastik lembut)</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="trackRecycling()">
+                    <i class="fas fa-recycle"></i> Laporkan Daur Ulang
+                </button>
+                
+                <div id="recycleResult" class="hidden">
+                    <div class="result-item">
+                        <h3>🎉 Laporan Berhasil!</h3>
+                        <p>Anda mendapatkan <strong id="earnedRecyclePoints">0</strong> Eco-Points</p>
+                        <p>Total plastik didaur ulang: <strong id="totalRecycled">0</strong> kg</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Reward Section -->
+            <div class="card">
+                <h3><i class="fas fa-gift"></i> Tukar Eco-Points dengan Hadiah Berkelanjutan</h3>
+                <p>Points Anda: <strong id="userPoints">0</strong> points</p>
+
+                <!-- Kategori 1: Tanaman & Pertanian -->
+                <div class="reward-category">
+                    <h3>🌿 Tanaman & Pertanian Berkelanjutan</h3>
+                    <div class="reward-grid">
+                        <div class="reward-card">
+                            <div class="reward-icon">
+                                <i class="fas fa-seedling"></i>
+                            </div>
+                            <div class="reward-points">100 pts</div>
+                            <h4>Paket Bibit Sayuran Organik</h4>
+                            <p class="reward-description">5 jenis bibit sayuran organik (tomat, cabai, kangkung, bayam, sawi) dengan panduan menanam</p>
+                            <div class="reward-benefit">
+                                <i class="fas fa-leaf"></i> Mendukung ketahanan pangan & mengurangi jejak karbon makanan
+                            </div>
+                            <button class="btn" onclick="redeemReward('bibit-sayuran')" style="margin-top: 1rem;">
+                                <i class="fas fa-shopping-cart"></i> Tukar Sekarang
+                            </button>
+                        </div>
+
+                        <div class="reward-card">
+                            <div class="reward-icon">
+                                <i class="fas fa-tree"></i>
+                            </div>
+                            <div class="reward-points">150 pts</div>
+                            <h4>Pohon Penyerap Polusi</h4>
+                            <p class="reward-description">Bibit pohon Trembesi atau Kersen + konsultasi penanaman gratis</p>
+                            <div class="reward-benefit">
+                                <i class="fas fa-wind"></i> Menyerap 28,5 kg CO2 per tahun & mengurangi polusi udara
+                            </div>
+                            <button class="btn" onclick="redeemReward('pohon-penyerap')" style="margin-top: 1rem;">
+                                <i class="fas fa-shopping-cart"></i> Tukar Sekarang
+                            </button>
+                        </div>
+
+                        <div class="reward-card">
+                            <div class="reward-icon">
+                                <i class="fas fa-spa"></i>
+                            </div>
+                            <div class="reward-points">80 pts</div>
+                            <h4>Kit Tanaman Obat Keluarga</h4>
+                            <p class="reward-description">Lengkap dengan jahe, kunyit, kencur, dan daun mint dalam pot daur ulang</p>
+                            <div class="reward-benefit">
+                                <i class="fas fa-heart"></i> Mengurangi obat kimia & mendukung kesehatan alami
+                            </div>
+                            <button class="btn" onclick="redeemReward('tanaman-obat')" style="margin-top: 1rem;">
+                                <i class="fas fa-shopping-cart"></i> Tukar Sekarang
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kategori 2: Produk Daur Ulang -->
+                <div class="reward-category">
+                    <h3>♻️ Produk Daur Ulang Kreatif</h3>
+                    <div class="reward-grid">
+                        <div class="reward-card">
+                            <div class="reward-icon">
+                                <i class="fas fa-shopping-bag"></i>
+                            </div>
+                            <div class="reward-points">50 pts</div>
+                            <h4>Tas Belanja Ramah Lingkungan</h4>
+                            <p class="reward-description">Tas kain katun organik yang dapat digunakan berulang kali, dibuat dari bahan daur ulang</p>
+                            <div class="reward-benefit">
+                                <i class="fas fa-ban"></i> Mengurangi 500 kantong plastik per tahun
+                            </div>
+                            <button class="btn" onclick="redeemReward('tas-belanja')" style="margin-top: 1rem;">
+                                <i class="fas fa-shopping-cart"></i> Tukar Sekarang
+                            </button>
+                        </div>
+
+                        <div class="reward-card">
+                            <div class="reward-icon">
+                                <i class="fas fa-wine-bottle"></i>
+                            </div>
+                            <div class="reward-points">120 pts</div>
+                            <h4>Set Botol & Tumblr Daur Ulang</h4>
+                            <p class="reward-description">Botol minum dan tumbler dari plastik daur ulang dengan desain eksklusif GreenSphere</p>
+                            <div class="reward-benefit">
+                                <i class="fas fa-tint"></i> Mencegah 365 botol plastik sekali pakai per tahun
+                            </div>
+                            <button class="btn" onclick="redeemReward('botol-tumbler')" style="margin-top: 1rem;">
+                                <i class="fas fa-shopping-cart"></i> Tukar Sekarang
+                            </button>
+                        </div>
+
+                        <div class="reward-card">
+                            <div class="reward-icon">
+                                <i class="fas fa-pencil-alt"></i>
+                            </div>
+                            <div class="reward-points">40 pts</div>
+                            <h4>Stationery Daur Ulang</h4>
+                            <p class="reward-description">Set alat tulis dari kertas dan plastik daur ulang (pensil, pulpen, notebook)</p>
+                            <div class="reward-benefit">
+                                <i class="fas fa-recycle"></i> Mendukung ekonomi sirkular & kreativitas
+                            </div>
+                            <button class="btn" onclick="redeemReward('stationery')" style="margin-top: 1rem;">
+                                <i class="fas fa-shopping-cart"></i> Tukar Sekarang
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kategori 3: Energi & Teknologi Hijau -->
+                <div class="reward-category">
+                    <h3>💡 Energi & Teknologi Hijau</h3>
+                    <div class="reward-grid">
+                        <div class="reward-card">
+                            <div class="reward-icon">
+                                <i class="fas fa-solar-panel"></i>
+                            </div>
+                            <div class="reward-points">300 pts</div>
+                            <h4>Solar Charger Portabel</h4>
+                            <p class="reward-description">Charger bertenaga surya untuk ponsel dan perangkat USB, kapasitas 10000mAh</p>
+                            <div class="reward-benefit">
+                                <i class="fas fa-sun"></i> Menghemat listrik & siap digunakan darurat
+                            </div>
+                            <button class="btn" onclick="redeemReward('solar-charger')" style="margin-top: 1rem;">
+                                <i class="fas fa-shopping-cart"></i> Tukar Sekarang
+                            </button>
+                        </div>
+
+                        <div class="reward-card">
+                            <div class="reward-icon">
+                                <i class="fas fa-lightbulb"></i>
+                            </div>
+                            <div class="reward-points">200 pts</div>
+                            <h4>Smart LED Bulb</h4>
+                            <p class="reward-description">Lampu LED hemat energi dengan sensor gerak, dapat mengurangi konsumsi listrik hingga 80%</p>
+                            <div class="reward-benefit">
+                                <i class="fas fa-bolt"></i> Menghemat 50 kWh listrik per tahun
+                            </div>
+                            <button class="btn" onclick="redeemReward('led-bulb')" style="margin-top: 1rem;">
+                                <i class="fas fa-shopping-cart"></i> Tukar Sekarang
+                            </button>
+                        </div>
+
+                        <div class="reward-card">
+                            <div class="reward-icon">
+                                <i class="fas fa-fan"></i>
+                            </div>
+                            <div class="reward-points">180 pts</div>
+                            <h4>Kipas Angin Tenaga Surya</h4>
+                            <p class="reward-description">Kipas angin portable dengan panel surya built-in, perfect untuk outdoor activities</p>
+                            <div class="reward-benefit">
+                                <i class="fas fa-leaf"></i> Zero emission & energi terbarukan
+                            </div>
+                            <button class="btn" onclick="redeemReward('kipas-surya')" style="margin-top: 1rem;">
+                                <i class="fas fa-shopping-cart"></i> Tukar Sekarang
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kategori 4: Kompos & Pengolahan Sampah -->
+                <div class="reward-category">
+                    <h3>🌱 Kompos & Pengolahan Sampah</h3>
+                    <div class="reward-grid">
+                        <div class="reward-card">
+                            <div class="reward-icon">
+                                <i class="fas fa-recycle"></i>
+                            </div>
+                            <div class="reward-points">90 pts</div>
+                            <h4>Komposter Rumahan</h4>
+                            <p class="reward-description">Set komposter mini dengan aerator dan panduan membuat kompos dari sampah dapur</p>
+                            <div class="reward-benefit">
+                                <i class="fas fa-trash"></i> Mengurangi 50% sampah organik rumah tangga
+                            </div>
+                            <button class="btn" onclick="redeemReward('komposter')" style="margin-top: 1rem;">
+                                <i class="fas fa-shopping-cart"></i> Tukar Sekarang
+                            </button>
+                        </div>
+
+                        <div class="reward-card">
+                            <div class="reward-icon">
+                                <i class="fas fa-seedling"></i>
+                            </div>
+                            <div class="reward-points">60 pts</div>
+                            <h4>Pupuk Kompos Organik</h4>
+                            <p class="reward-description">5kg pupuk kompos premium hasil daur ulang sampah organik komunitas GreenSphere</p>
+                            <div class="reward-benefit">
+                                <i class="fas fa-tree"></i> Menyuburkan tanah tanpa bahan kimia
+                            </div>
+                            <button class="btn" onclick="redeemReward('pupuk-kompos')" style="margin-top: 1rem;">
+                                <i class="fas fa-shopping-cart"></i> Tukar Sekarang
+                            </button>
+                        </div>
+
+                        <div class="reward-card">
+                            <div class="reward-icon">
+                                <i class="fas fa-box"></i>
+                            </div>
+                            <div class="reward-points">70 pts</div>
+                            <h4>Tempat Sampah Terpilah</h4>
+                            <p class="reward-description">Set 3 tempat sampah dengan label organik, anorganik, dan B3 dari bahan daur ulang</p>
+                            <div class="reward-benefit">
+                                <i class="fas fa-sort"></i> Memudahkan pemilahan sampah dari sumber
+                            </div>
+                            <button class="btn" onclick="redeemReward('tempat-sampah')" style="margin-top: 1rem;">
+                                <i class="fas fa-shopping-cart"></i> Tukar Sekarang
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kategori 5: Edukasi & Komunitas -->
+                <div class="reward-category">
+                    <h3>🎓 Edukasi & Komunitas</h3>
+                    <div class="reward-grid">
+                        <div class="reward-card">
+                            <div class="reward-icon">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <div class="reward-points">150 pts</div>
+                            <h4>Workshop Lingkungan Gratis</h4>
+                            <p class="reward-description">Tiket gratis workshop "Zero Waste Lifestyle" atau "Urban Farming" dengan ahli lingkungan</p>
+                            <div class="reward-benefit">
+                                <i class="fas fa-brain"></i> Meningkatkan pengetahuan & keterampilan praktis
+                            </div>
+                            <button class="btn" onclick="redeemReward('workshop')" style="margin-top: 1rem;">
+                                <i class="fas fa-shopping-cart"></i> Tukar Sekarang
+                            </button>
+                        </div>
+
+                        <div class="reward-card">
+                            <div class="reward-icon">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <div class="reward-points">80 pts</div>
+                            <h4>E-Book Panduan Sustainable Living</h4>
+                            <p class="reward-description">Koleksi 5 e-book tentang gaya hidup berkelanjutan, dari dasar hingga advanced tips</p>
+                            <div class="reward-benefit">
+                                <i class="fas fa-graduation-cap"></i> Sumber referensi lengkap untuk hidup hijau
+                            </div>
+                            <button class="btn" onclick="redeemReward('ebook')" style="margin-top: 1rem;">
+                                <i class="fas fa-shopping-cart"></i> Tukar Sekarang
+                            </button>
+                        </div>
+
+                        <div class="reward-card">
+                            <div class="reward-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="reward-points">200 pts</div>
+                            <h4>Paket Komunitas Hijau</h4>
+                            <p class="reward-description">Untuk komunitas: 10 bibit pohon + alat kebun + konsultasi pembuatan green space</p>
+                            <div class="reward-benefit">
+                                <i class="fas fa-handshake"></i> Memperkuat gerakan lingkungan di komunitas
+                            </div>
+                            <button class="btn" onclick="redeemReward('paket-komunitas')" style="margin-top: 1rem;">
+                                <i class="fas fa-shopping-cart"></i> Tukar Sekarang
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kategori 6: Digital & Prestise -->
+                <div class="reward-category">
+                    <h3>🏆 Digital & Prestise</h3>
+                    <div class="reward-grid">
+                        <div class="reward-card">
+                            <div class="reward-icon">
+                                <i class="fas fa-medal"></i>
+                            </div>
+                            <div class="reward-points">250 pts</div>
+                            <h4>Sertifikat Eco-Warrior</h4>
+                            <p class="reward-description">Sertifikat digital resmi GreenSphere yang dapat dibagikan di media sosial dan CV</p>
+                            <div class="reward-benefit">
+                                <i class="fas fa-award"></i> Pengakuan prestasi & meningkatkan personal branding
+                            </div>
+                            <button class="btn" onclick="redeemReward('sertifikat')" style="margin-top: 1rem;">
+                                <i class="fas fa-shopping-cart"></i> Tukar Sekarang
+                            </button>
+                        </div>
+
+                        <div class="reward-card">
+                            <div class="reward-icon">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <div class="reward-points">500 pts</div>
+                            <h4>Membership Premium GreenSphere</h4>
+                            <p class="reward-description">Akses fitur premium, early bird event, dan konsultasi lingkungan gratis selama 1 tahun</p>
+                            <div class="reward-benefit">
+                                <i class="fas fa-star"></i> Eksklusivitas & akses komunitas elite
+                            </div>
+                            <button class="btn" onclick="redeemReward('membership')" style="margin-top: 1rem;">
+                                <i class="fas fa-shopping-cart"></i> Tukar Sekarang
+                            </button>
+                        </div>
+
+                        <div class="reward-card">
+                            <div class="reward-icon">
+                                <i class="fas fa-ticket-alt"></i>
+                            </div>
+                            <div class="reward-points">120 pts</div>
+                            <h4>Voucher Belanja Eco-Store</h4>
+                            <p class="reward-description">Voucher senilai Rp 50.000 untuk berbelanja di eco-store partner GreenSphere</p>
+                            <div class="reward-benefit">
+                                <i class="fas fa-store"></i> Mendukung UMKM ramah lingkungan
+                            </div>
+                            <button class="btn" onclick="redeemReward('voucher')" style="margin-top: 1rem;">
+                                <i class="fas fa-shopping-cart"></i> Tukar Sekarang
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Global State
+        let currentUser = null;
+        let userData = {
+            ecoScore: 0,
+            totalPoints: 0,
+            totalRecycled: 0,
+            challenges: [],
+            completedChallenges: [],
+            footprintHistory: [],
+            recentActivity: [],
+            tempProofs: {},
+            redeemedRewards: []
+        };
+
+        // Enhanced Rewards Data
+        const rewardsData = {
+            // Tanaman & Pertanian
+            'bibit-sayuran': { name: 'Paket Bibit Sayuran Organik', cost: 100, category: 'tanaman' },
+            'pohon-penyerap': { name: 'Pohon Penyerap Polusi', cost: 150, category: 'tanaman' },
+            'tanaman-obat': { name: 'Kit Tanaman Obat Keluarga', cost: 80, category: 'tanaman' },
+            
+            // Produk Daur Ulang
+            'tas-belanja': { name: 'Tas Belanja Ramah Lingkungan', cost: 50, category: 'daur-ulang' },
+            'botol-tumbler': { name: 'Set Botol & Tumblr Daur Ulang', cost: 120, category: 'daur-ulang' },
+            'stationery': { name: 'Stationery Daur Ulang', cost: 40, category: 'daur-ulang' },
+            
+            // Energi & Teknologi
+            'solar-charger': { name: 'Solar Charger Portabel', cost: 300, category: 'teknologi' },
+            'led-bulb': { name: 'Smart LED Bulb', cost: 200, category: 'teknologi' },
+            'kipas-surya': { name: 'Kipas Angin Tenaga Surya', cost: 180, category: 'teknologi' },
+            
+            // Kompos & Sampah
+            'komposter': { name: 'Komposter Rumahan', cost: 90, category: 'kompos' },
+            'pupuk-kompos': { name: 'Pupuk Kompos Organik', cost: 60, category: 'kompos' },
+            'tempat-sampah': { name: 'Tempat Sampah Terpilah', cost: 70, category: 'kompos' },
+            
+            // Edukasi & Komunitas
+            'workshop': { name: 'Workshop Lingkungan Gratis', cost: 150, category: 'edukasi' },
+            'ebook': { name: 'E-Book Panduan Sustainable Living', cost: 80, category: 'edukasi' },
+            'paket-komunitas': { name: 'Paket Komunitas Hijau', cost: 200, category: 'edukasi' },
+            
+            // Digital & Prestise
+            'sertifikat': { name: 'Sertifikat Eco-Warrior', cost: 250, category: 'digital' },
+            'membership': { name: 'Membership Premium GreenSphere', cost: 500, category: 'digital' },
+            'voucher': { name: 'Voucher Belanja Eco-Store', cost: 120, category: 'digital' }
+        };
+
+        // Challenge Data
+        const challengesData = [
+            {
+                id: 'plastic-free',
+                name: '🌿 1 Hari Tanpa Plastik',
+                description: 'Hindari penggunaan plastik sekali pakai selama 24 jam penuh',
+                points: 50,
+                icon: 'fas fa-ban',
+                proofDescription: 'Unggah foto kegiatan tanpa plastik (membawa tas belanja sendiri, menggunakan tumbler, dll)'
+            },
+            {
+                id: 'energy-save',
+                name: '💡 Hemat Energi 20%',
+                description: 'Kurangi konsumsi listrik mingguan hingga 20% dari biasanya',
+                points: 75,
+                icon: 'fas fa-bolt',
+                proofDescription: 'Unggah foto meteran listrik atau tagihan yang menunjukkan pengurangan'
+            },
+            {
+                id: 'plant-tree',
+                name: '🌱 Tanam 1 Pohon',
+                description: 'Tanam dan rawat satu pohon selama minimal 1 bulan',
+                points: 100,
+                icon: 'fas fa-tree',
+                proofDescription: 'Unggah foto proses menanam atau pohon yang sudah ditanam'
+            },
+            {
+                id: 'waste-sorting',
+                name: '🗑️ Pilah Sampah 3 Kategori',
+                description: 'Pilah sampah menjadi organik, anorganik, dan B3 selama 1 minggu',
+                points: 60,
+                icon: 'fas fa-trash-alt',
+                proofDescription: 'Unggah foto tempat sampah terpilah dengan 3 kategori berbeda'
+            },
+            {
+                id: 'public-transport',
+                name: '🚍 Gunakan Transportasi Umum',
+                description: 'Gunakan transportasi umum selama 5 hari berturut-turut',
+                points: 80,
+                icon: 'fas fa-bus',
+                proofDescription: 'Unggah foto tiket transportasi umum atau selfie di halte/stasiun'
+            },
+            {
+                id: 'composting',
+                name: '♻️ Buat Kompos Rumahan',
+                description: 'Buat komposter sederhana dan hasilkan kompos dari sampah organik',
+                points: 90,
+                icon: 'fas fa-recycle',
+                proofDescription: 'Unggah foto komposter dan hasil kompos yang dibuat'
+            }
+        ];
+
+        // User Type Selection
+        function selectUserType(type) {
+            document.querySelectorAll('.user-type-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.user-type-btn').classList.add('active');
+
+            const communityFields = document.querySelector('.community-fields');
+            if (type === 'komunitas') {
+                communityFields.classList.add('active');
+            } else {
+                communityFields.classList.remove('active');
+            }
+        }
+
+        // Login Function
+        function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const userType = document.querySelector('.user-type-btn.active').textContent.trim().toLowerCase();
+
+            if (!email || !password) {
+                alert('❌ Email dan password harus diisi!');
+                return;
+            }
+
+            // Get user data based on type
+            let userInfo = {};
+            if (userType === 'individu') {
+                const name = document.getElementById('individuName').value || 'User';
+                userInfo = {
+                    type: 'individu',
+                    name: name,
+                    email: email,
+                    joinDate: new Date().toLocaleDateString('id-ID')
+                };
+            } else {
+                const communityName = document.getElementById('communityName').value || 'Komunitas Hijau';
+                const communityType = document.getElementById('communityType').value;
+                const members = document.getElementById('communityMembers').value || '0';
+                const location = document.getElementById('communityLocation').value || 'Indonesia';
+                
+                userInfo = {
+                    type: 'komunitas',
+                    name: communityName,
+                    email: email,
+                    communityType: communityType,
+                    members: parseInt(members),
+                    location: location,
+                    joinDate: new Date().toLocaleDateString('id-ID')
+                };
+            }
+
+            // Set current user
+            currentUser = userInfo;
+
+            // Load or create user data
+            loadUserData();
+
+            // Show main app
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('navbar').style.display = 'block';
+            document.getElementById('mainContainer').style.display = 'block';
+
+            // Update UI with user info
+            updateUserUI();
+
+            alert(`🎉 Selamat datang ${userInfo.name}!`);
+        }
+
+        // Logout Function
+        function logout() {
+            currentUser = null;
+            userData = {
+                ecoScore: 0,
+                totalPoints: 0,
+                totalRecycled: 0,
+                challenges: [],
+                completedChallenges: [],
+                footprintHistory: [],
+                recentActivity: [],
+                tempProofs: {},
+                redeemedRewards: []
+            };
+
+            document.getElementById('loginSection').style.display = 'flex';
+            document.getElementById('navbar').style.display = 'none';
+            document.getElementById('mainContainer').style.display = 'none';
+
+            // Reset login form
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('individuName').value = '';
+            document.getElementById('communityName').value = '';
+            document.getElementById('communityMembers').value = '';
+            document.getElementById('communityLocation').value = '';
+
+            alert('👋 Anda telah logout dari GreenSphere');
+        }
+
+        // Update UI with user info
+        function updateUserUI() {
+            if (!currentUser) return;
+
+            // Update user type badge
+            const badge = document.getElementById('userTypeBadge');
+            if (currentUser.type === 'individu') {
+                badge.innerHTML = '<i class="fas fa-user"></i> Individu';
+            } else {
+                badge.innerHTML = `<i class="fas fa-users"></i> ${currentUser.communityType}`;
+            }
+
+            // Update welcome message
+            const welcomeMsg = document.getElementById('welcomeMessage');
+            if (currentUser.type === 'individu') {
+                welcomeMsg.textContent = `Halo ${currentUser.name}! Mari jaga lingkungan bersama.`;
+            } else {
+                welcomeMsg.textContent = `Selamat datang ${currentUser.name}! Komunitas ${currentUser.members} anggota di ${currentUser.location}.`;
+            }
+        }
+
+        // Load data from localStorage with user-specific key
+        function loadUserData() {
+            if (!currentUser) return false;
+
+            const userKey = `greenSphereData_${currentUser.email}`;
+            const saved = localStorage.getItem(userKey);
+            
+            if (saved) {
+                try {
+                    userData = JSON.parse(saved);
+                    console.log('Data loaded for user:', currentUser.email);
+                    updateUI();
+                    loadChallenges();
+                    loadLeaderboard();
+                    return true;
+                } catch (e) {
+                    console.error('Error loading data:', e);
+                    // Reset to default if corrupted
+                    userData = {
+                        ecoScore: 0,
+                        totalPoints: 0,
+                        totalRecycled: 0,
+                        challenges: [],
+                        completedChallenges: [],
+                        footprintHistory: [],
+                        recentActivity: [],
+                        tempProofs: {},
+                        redeemedRewards: []
+                    };
+                }
+            }
+            return false;
+        }
+
+        // Save data to localStorage with user-specific key
+        function saveUserData() {
+            if (!currentUser) return false;
+
+            try {
+                const userKey = `greenSphereData_${currentUser.email}`;
+                localStorage.setItem(userKey, JSON.stringify(userData));
+                console.log('Data saved for user:', currentUser.email);
+                updateUI();
+                return true;
+            } catch (e) {
+                console.error('Error saving data:', e);
+                return false;
+            }
+        }
+
+        // Enhanced Redeem Reward Function
+        function redeemReward(rewardId) {
+            if (!currentUser) {
+                alert('❌ Silakan login terlebih dahulu!');
+                return;
+            }
+            
+            console.log('Redeeming reward:', rewardId);
+            
+            const reward = rewardsData[rewardId];
+            
+            if (!reward) {
+                alert('❌ Reward tidak valid');
+                return;
+            }
+
+            if (userData.totalPoints >= reward.cost) {
+                // Check if user already redeemed this reward
+                if (userData.redeemedRewards.includes(rewardId)) {
+                    alert(`⚠️ Anda sudah menukar ${reward.name} sebelumnya!`);
+                    return;
+                }
+
+                userData.totalPoints -= reward.cost;
+                userData.redeemedRewards.push(rewardId);
+                
+                userData.recentActivity.unshift({
+                    type: 'reward',
+                    message: `Menukar ${reward.cost} points dengan ${reward.name}`,
+                    points: -reward.cost,
+                    date: new Date().toLocaleDateString('id-ID')
+                });
+                
+                if (saveUserData()) {
+                    // Show detailed success message based on reward category
+                    let successMessage = `🎉 Selamat! Anda berhasil menukar ${reward.cost} points dengan:\n**${reward.name}**\n\n`;
+                    
+                    // Add category-specific instructions
+                    switch(reward.category) {
+                        case 'tanaman':
+                            successMessage += "📦 Akan dikirim dalam 3-5 hari kerja. Siapkan area tanam yang cukup sinar matahari!";
+                            break;
+                        case 'daur-ulang':
+                            successMessage += "♻️ Produk ramah lingkungan ini akan tiba dalam 5-7 hari. Gunakan dengan bijak!";
+                            break;
+                        case 'teknologi':
+                            successMessage += "💡 Produk akan dikirim dalam 7-10 hari. Baca manual penggunaan untuk hasil optimal!";
+                            break;
+                        case 'kompos':
+                            successMessage += "🌱 Paket akan dikirim dalam 3-5 hari. Mulai olah sampah organik Anda!";
+                            break;
+                        case 'edukasi':
+                            successMessage += "🎓 Detail partisipasi akan dikirim via email dalam 24 jam. Periksa inbox Anda!";
+                            break;
+                        case 'digital':
+                            successMessage += "📧 Sertifikat/voucher akan dikirim via email dalam 1x24 jam. Cek folder spam juga!";
+                            break;
+                        default:
+                            successMessage += "📦 Reward akan diproses dalam 3-5 hari kerja.";
+                    }
+                    
+                    alert(successMessage);
+                }
+            } else {
+                alert(`❌ Points tidak cukup. Anda butuh ${reward.cost} points, sedangkan points Anda ${userData.totalPoints}.\n\n💡 Tips: Ikuti lebih banyak challenge dan laporkan daur ulang untuk mendapatkan points!`);
+            }
+        }
+
+        // Navigation
+        function showSection(sectionId) {
+            if (!currentUser) return;
+            
+            console.log('Showing section:', sectionId);
+            
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Show target section
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            
+            // Add active class to clicked nav link
+            const clickedLink = event?.target.closest('.nav-link');
+            if (clickedLink) {
+                clickedLink.classList.add('active');
+            } else {
+                // Set dashboard as active if no event
+                document.querySelector('.nav-link').classList.add('active');
+            }
+
+            // Initialize specific section features
+            if (sectionId === 'map') {
+                setTimeout(initMap, 100);
+            } else if (sectionId === 'leaderboard') {
+                loadLeaderboard();
+            } else if (sectionId === 'challenges') {
+                loadChallenges();
+            }
+        }
+
+        function toggleMobileMenu() {
+            const navMenu = document.querySelector('.nav-menu');
+            navMenu.classList.toggle('active');
+        }
+
+        // 1. Eco-Score Calculator
+        function calculateFootprint() {
+            if (!currentUser) {
+                alert('❌ Silakan login terlebih dahulu!');
+                return;
+            }
+            
+            console.log('Calculating footprint...');
+            
+            const electricity = parseFloat(document.getElementById('electricity').value) || 0;
+            const vehicle = parseFloat(document.getElementById('vehicle').value) || 0;
+            const waste = parseFloat(document.getElementById('waste').value) || 0;
+            const water = parseFloat(document.getElementById('water').value) || 0;
+
+            console.log('Input values:', { electricity, vehicle, waste, water });
+
+            const EMISSION_FACTORS = {
+                electricity: 0.85, // kg CO2 per kWh
+                vehicle: 0.12,    // kg CO2 per km
+                waste: 2.0,       // kg CO2 per kg waste
+                water: 0.34       // kg CO2 per m3
+            };
+
+            const footprint = {
+                electricity: electricity * EMISSION_FACTORS.electricity,
+                vehicle: vehicle * EMISSION_FACTORS.vehicle,
+                waste: waste * EMISSION_FACTORS.waste,
+                water: water * EMISSION_FACTORS.water
+            };
+
+            const total = Object.values(footprint).reduce((a, b) => a + b, 0);
+            const ecoScore = Math.max(0, Math.min(100, 100 - (total * 0.3)));
+            const pointsEarned = Math.floor(ecoScore / 5);
+
+            console.log('Calculation results:', { total, ecoScore, pointsEarned });
+
+            userData.ecoScore = Math.round(ecoScore);
+            userData.totalPoints += pointsEarned;
+            
+            userData.footprintHistory.push({
+                date: new Date().toLocaleDateString('id-ID'),
+                footprint: total,
+                score: ecoScore
+            });
+
+            userData.recentActivity.unshift({
+                type: 'footprint',
+                message: `Menghitung jejak karbon - ${total.toFixed(1)} kg CO2`,
+                points: pointsEarned,
+                date: new Date().toLocaleDateString('id-ID')
+            });
+
+            // Update UI
+            document.getElementById('ecoScore').textContent = Math.round(ecoScore);
+            document.getElementById('totalFootprint').textContent = total.toFixed(1);
+            document.getElementById('equivalentTrees').textContent = (total / 21.77).toFixed(1);
+            document.getElementById('earnedPoints').textContent = pointsEarned;
+            
+            const resultElement = document.getElementById('result');
+            if (resultElement) {
+                resultElement.classList.remove('hidden');
+                resultElement.classList.add('visible');
+            }
+
+            if (saveUserData()) {
+                alert(`✅ Jejak karbon berhasil dihitung!\nEco-Score: ${Math.round(ecoScore)}\nPoints diperoleh: ${pointsEarned}`);
+            } else {
+                alert('❌ Gagal menyimpan data');
+            }
+        }
+
+        // 2. WebGIS Map
+        function initMap() {
+            console.log('Initializing map...');
+            
+            // Clear existing map
+            const mapContainer = document.getElementById('leafletMap');
+            if (!mapContainer) {
+                console.error('Map container not found');
+                return;
+            }
+
+            if (mapContainer._leaflet_id) {
+                map.remove();
+            }
+
+            const map = L.map('leafletMap').setView([-6.2088, 106.8456], 12);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Sample locations
+            const locations = [
+                { name: "Bank Sampah Hijau", lat: -6.2088, lng: 106.8456, type: "bank_sampah" },
+                { name: "Drop Point E-Waste", lat: -6.2188, lng: 106.8356, type: "e_waste" },
+                { name: "Taman Kota Merdeka", lat: -6.1988, lng: 106.8556, type: "green_space" },
+                { name: "UMKM Daur Ulang", lat: -6.2288, lng: 106.8256, type: "recycle" },
+                { name: "Urban Farming Community", lat: -6.1888, lng: 106.8656, type: "farming" }
+            ];
+
+            locations.forEach(loc => {
+                const icon = L.divIcon({
+                    html: getLocationIcon(loc.type),
+                    className: 'custom-icon',
+                    iconSize: [30, 30]
+                });
+
+                L.marker([loc.lat, loc.lng], { icon: icon })
+                    .addTo(map)
+                    .bindPopup(`<b>${loc.name}</b><br>${getLocationType(loc.type)}`);
+            });
+
+            console.log('Map initialized successfully');
+        }
+
+        function getLocationIcon(type) {
+            const icons = {
+                bank_sampah: '🏦',
+                e_waste: '💻',
+                green_space: '🌳',
+                recycle: '♻️',
+                farming: '🌱'
+            };
+            return icons[type] || '📍';
+        }
+
+        function getLocationType(type) {
+            const types = {
+                bank_sampah: "Bank Sampah",
+                e_waste: "Drop Point E-Waste",
+                green_space: "Ruang Hijau",
+                recycle: "UMKM Daur Ulang",
+                farming: "Urban Farming"
+            };
+            return types[type] || "Lokasi Lingkungan";
+        }
+
+        // 3. Eco-Challenges dengan Upload Bukti
+        function loadChallenges() {
+            const challengeList = document.getElementById('challengeList');
+            if (!challengeList) {
+                console.error('Challenge list container not found');
+                return;
+            }
+
+            console.log('Loading challenges, user data:', userData);
+
+            challengeList.innerHTML = challengesData.map(challenge => {
+                const isJoined = userData.challenges.includes(challenge.id);
+                const isCompleted = userData.completedChallenges.includes(challenge.id);
+                const hasProof = userData.tempProofs && userData.tempProofs[challenge.id];
+                
+                console.log(`Challenge ${challenge.id}: joined=${isJoined}, completed=${isCompleted}, hasProof=${hasProof}`);
+                
+                return `
+                    <div class="challenge-card">
+                        <div class="challenge-icon">
+                            <i class="${challenge.icon}"></i>
+                        </div>
+                        <div class="challenge-header">
+                            <h3>${challenge.name}</h3>
+                            <div class="challenge-points">${challenge.points} pts</div>
+                        </div>
+                        <p>${challenge.description}</p>
+                        
+                        ${!isJoined && !isCompleted ? `
+                            <button class="btn" onclick="joinChallenge('${challenge.id}')" style="margin-top: 1rem;">
+                                <i class="fas fa-play"></i> Mulai Challenge
+                            </button>
+                        ` : ''}
+                        
+                        ${isJoined && !isCompleted ? `
+                            <div class="status-joined challenge-status">
+                                <i class="fas fa-hourglass-half"></i> Menunggu Verifikasi
+                            </div>
+                            <div class="upload-area" onclick="document.getElementById('upload-${challenge.id}').click()">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <p>Klik untuk upload bukti challenge</p>
+                                <p><small>${challenge.proofDescription}</small></p>
+                                <input type="file" id="upload-${challenge.id}" 
+                                    style="display: none;" 
+                                    accept="image/*" 
+                                    onchange="uploadProof('${challenge.id}', this)">
+                                <img id="preview-${challenge.id}" class="proof-image" 
+                                    src="${hasProof ? userData.tempProofs[challenge.id] : ''}" 
+                                    style="${hasProof ? 'display: block;' : 'display: none;'}" 
+                                    alt="Preview Bukti">
+                            </div>
+                            <button class="btn btn-secondary" onclick="submitChallenge('${challenge.id}')" 
+                                style="margin-top: 1rem;"
+                                ${!hasProof ? 'disabled' : ''}>
+                                <i class="fas fa-paper-plane"></i> Submit untuk Verifikasi
+                            </button>
+                        ` : ''}
+                        
+                        ${isCompleted ? `
+                            <div class="status-completed challenge-status">
+                                <i class="fas fa-check-circle"></i> Challenge Selesai +${challenge.points} pts
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            console.log('Challenges loaded successfully');
+        }
+
+        function joinChallenge(challengeId) {
+            if (!currentUser) {
+                alert('❌ Silakan login terlebih dahulu!');
+                return;
+            }
+            
+            console.log('Joining challenge:', challengeId);
+            
+            if (!userData.challenges.includes(challengeId)) {
+                userData.challenges.push(challengeId);
+                userData.recentActivity.unshift({
+                    type: 'challenge_join',
+                    message: `Memulai challenge: ${getChallengeName(challengeId)}`,
+                    points: 0,
+                    date: new Date().toLocaleDateString('id-ID')
+                });
+                
+                if (saveUserData()) {
+                    loadChallenges();
+                    alert(`🎯 Challenge "${getChallengeName(challengeId)}" dimulai! Silakan upload bukti.`);
+                }
+            } else {
+                alert('⚠️ Anda sudah bergabung dalam challenge ini!');
+            }
+        }
+
+        function uploadProof(challengeId, input) {
+            console.log('Uploading proof for challenge:', challengeId);
+            
+            const file = input.files[0];
+            if (file) {
+                // Check file size (max 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('❌ File terlalu besar. Maksimal 5MB.');
+                    return;
+                }
+
+                // Check file type
+                if (!file.type.startsWith('image/')) {
+                    alert('❌ Hanya file gambar yang diizinkan.');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Update preview image
+                    const preview = document.getElementById(`preview-${challengeId}`);
+                    if (preview) {
+                        preview.src = e.target.result;
+                        preview.style.display = 'block';
+                    }
+                    
+                    // Save proof temporarily
+                    if (!userData.tempProofs) userData.tempProofs = {};
+                    userData.tempProofs[challengeId] = e.target.result;
+                    
+                    // Enable submit button
+                    const submitBtn = document.querySelector(`button[onclick="submitChallenge('${challengeId}')"]`);
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                    }
+                    
+                    if (saveUserData()) {
+                        console.log('Proof uploaded successfully');
+                    }
+                };
+                reader.onerror = function() {
+                    alert('❌ Gagal membaca file. Coba lagi.');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function submitChallenge(challengeId) {
+            if (!currentUser) {
+                alert('❌ Silakan login terlebih dahulu!');
+                return;
+            }
+            
+            console.log('Submitting challenge:', challengeId);
+            
+            if (userData.tempProofs && userData.tempProofs[challengeId]) {
+                const challenge = challengesData.find(c => c.id === challengeId);
+                
+                if (challenge) {
+                    // Remove from joined, add to completed
+                    userData.challenges = userData.challenges.filter(id => id !== challengeId);
+                    if (!userData.completedChallenges.includes(challengeId)) {
+                        userData.completedChallenges.push(challengeId);
+                        userData.totalPoints += challenge.points;
+                        
+                        userData.recentActivity.unshift({
+                            type: 'challenge_complete',
+                            message: `Menyelesaikan challenge: ${challenge.name}`,
+                            points: challenge.points,
+                            date: new Date().toLocaleDateString('id-ID')
+                        });
+                        
+                        // Clean up temporary proof
+                        delete userData.tempProofs[challengeId];
+                        
+                        if (saveUserData()) {
+                            loadChallenges();
+                            alert(`🎉 Challenge "${challenge.name}" berhasil disubmit!\nAnda mendapatkan ${challenge.points} Eco-Points!`);
+                        }
+                    }
+                }
+            } else {
+                alert('❌ Silakan upload bukti terlebih dahulu!');
+            }
+        }
+
+        function getChallengeName(challengeId) {
+            const challenge = challengesData.find(c => c.id === challengeId);
+            return challenge ? challenge.name : 'Challenge';
+        }
+
+        // 4. Leaderboard
+        function loadLeaderboard() {
+            const leaderboardList = document.getElementById('leaderboardList');
+            if (!leaderboardList) return;
+
+            const leaderboardData = [
+                { rank: 1, name: "Universitas Indonesia", score: 2850, members: 1250, type: "sekolah" },
+                { rank: 2, name: "Kota Bandung", score: 2340, members: 890, type: "kelurahan" },
+                { rank: 3, name: "SMAN 8 Jakarta", score: 1980, members: 450, type: "sekolah" },
+                { rank: 4, name: "Komunitas Hijau BSD", score: 1650, members: 320, type: "organisasi" },
+                { rank: 5, name: "Green Office Sudirman", score: 1420, members: 280, type: "perusahaan" }
+            ];
+
+            const leaderboardHTML = leaderboardData.map(community => `
+                <div class="leaderboard-item">
+                    <div class="rank rank-${community.rank}">#${community.rank}</div>
+                    <div class="community-info">
+                        <h3>${community.name}</h3>
+                        <p>${community.members} anggota | ${getCommunityTypeName(community.type)} | Total Points: ${community.score}</p>
+                    </div>
+                    <div class="score">
+                        <div class="eco-score">${community.score}</div>
+                        <span>Points</span>
+                    </div>
+                </div>
+            `).join('');
+
+            leaderboardList.innerHTML = leaderboardHTML;
+        }
+
+        function getCommunityTypeName(type) {
+            const types = {
+                'sekolah': 'Sekolah/Kampus',
+                'kelurahan': 'Kelurahan/Desa',
+                'organisasi': 'Organisasi',
+                'perusahaan': 'Perusahaan',
+                'lainnya': 'Lainnya'
+            };
+            return types[type] || type;
+        }
+
+        // 5. AI Chatbot
+        function handleChatInput(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            // Add user message
+            addMessage(message, 'user');
+            input.value = '';
+
+            // Simulate AI response
+            setTimeout(() => {
+                const response = generateAIResponse(message);
+                addMessage(response, 'bot');
+            }, 1000);
+        }
+
+        function addMessage(text, sender) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.innerHTML = sender === 'bot' ? 
+                `<strong>Eco-Mentor:</strong> ${text}` : 
+                `<strong>Anda:</strong> ${text}`;
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function generateAIResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            const responses = {
+                'sampah': 'Untuk mengurangi sampah, coba pilah sampah organik dan anorganik. Gunakan komposter untuk sampah organik dan bawa sampah anorganik ke bank sampah terdekat! Jangan lupa laporkan di fitur daur ulang GreenSphere untuk dapat points!',
+                'plastik': 'Kurangi plastik sekali pakai dengan: 1. Bawa tas belanja sendiri, 2. Gunakan botol minum reusable, 3. Hindari produk dengan kemasan berlebihan, 4. Ikuti challenge "1 Hari Tanpa Plastik" di GreenSphere!',
+                'energi': 'Hemat energi dengan: 1. Matikan lampu dan perangkat elektronik saat tidak digunakan, 2. Gunakan perangkat hemat energi, 3. Manfaatkan pencahayaan alami, 4. Atur AC pada suhu 24-25°C. Ikuti challenge hemat energi untuk dapat points!',
+                'listrik': 'Cabut charger saat tidak digunakan, gunakan AC pada suhu 24-25°C, dan ganti lampu dengan LED untuk menghemat listrik. Monitor penghematan Anda di kalkulator Eco-Score!',
+                'tanam': 'Menanam pohon membantu menyerap CO2. Mulailah dengan tanaman dalam pot di rumah, atau ikuti kegiatan penghijauan di komunitas Anda! GreenSphere menyediakan program tukar points dengan bibit tanaman.',
+                'daur ulang': 'Pilah sampah dengan benar: organik (kompos), anorganik (bank sampah), B3 (drop point khusus). Laporkan daur ulang Anda di GreenSphere untuk dapat Eco-Points yang bisa ditukar hadiah!',
+                'reward': 'Dengan Eco-Points, Anda bisa menukar berbagai hadiah berkelanjutan seperti bibit tanaman, produk daur ulang, alat hemat energi, workshop lingkungan, dan masih banyak lagi!',
+                'default': 'Itu pertanyaan yang bagus! Untuk tips lingkungan yang lebih spesifik, coba kunjungi fitur Eco-Challenge atau konsultasi dengan komunitas hijau di daerah Anda. Jangan lupa laporkan aksi lingkungan Anda untuk dapat Eco-Points! 🌱'
+            };
+
+            for (const [keyword, response] of Object.entries(responses)) {
+                if (lowerMessage.includes(keyword)) {
+                    return response;
+                }
+            }
+            return responses.default;
+        }
+
+        // 6. Recycle-to-Pot Program
+        function trackRecycling() {
+            if (!currentUser) {
+                alert('❌ Silakan login terlebih dahulu!');
+                return;
+            }
+            
+            const weightInput = document.getElementById('plasticWeight');
+            const typeSelect = document.getElementById('plasticType');
+            
+            if (!weightInput || !typeSelect) {
+                alert('❌ Form tidak ditemukan');
+                return;
+            }
+
+            const weight = parseFloat(weightInput.value);
+            const type = typeSelect.value;
+            
+            console.log('Tracking recycling:', { weight, type });
+
+            if (isNaN(weight) || weight <= 0) {
+                alert('❌ Masukkan berat plastik yang valid (lebih dari 0 kg)');
+                return;
+            }
+
+            const pointsEarned = Math.floor(weight * 20); // 20 points per kg
+            userData.totalPoints += pointsEarned;
+            userData.totalRecycled += weight;
+
+            userData.recentActivity.unshift({
+                type: 'recycling',
+                message: `Melaporkan daur ulang ${weight}kg plastik ${type}`,
+                points: pointsEarned,
+                date: new Date().toLocaleDateString('id-ID')
+            });
+
+            // Update UI
+            document.getElementById('earnedRecyclePoints').textContent = pointsEarned;
+            document.getElementById('totalRecycled').textContent = userData.totalRecycled.toFixed(1);
+            
+            const resultElement = document.getElementById('recycleResult');
+            if (resultElement) {
+                resultElement.classList.remove('hidden');
+                resultElement.classList.add('visible');
+            }
+
+            // Reset form
+            weightInput.value = '2.5';
+
+            if (saveUserData()) {
+                alert(`♻️ Terima kasih! ${weight}kg plastik ${type} berhasil dilaporkan.\nAnda mendapatkan ${pointsEarned} Eco-Points!\n\n💡 Points bisa ditukar dengan berbagai hadiah berkelanjutan di section Reward!`);
+            } else {
+                alert('❌ Gagal menyimpan data');
+            }
+        }
+
+        // Update UI
+        function updateUI() {
+            console.log('Updating UI with data:', userData);
+            
+            // Update points display
+            const navPoints = document.getElementById('navPoints');
+            const userPoints = document.getElementById('userPoints');
+            const dashboardPoints = document.getElementById('dashboardPoints');
+            
+            if (navPoints) navPoints.textContent = userData.totalPoints;
+            if (userPoints) userPoints.textContent = userData.totalPoints;
+            if (dashboardPoints) dashboardPoints.textContent = userData.totalPoints;
+            
+            // Update dashboard stats
+            const dashboardScore = document.getElementById('dashboardScore');
+            const dashboardChallenges = document.getElementById('dashboardChallenges');
+            const dashboardRecycled = document.getElementById('dashboardRecycled');
+            const totalRecycled = document.getElementById('totalRecycled');
+            
+            if (dashboardScore) dashboardScore.textContent = userData.ecoScore;
+            if (dashboardChallenges) dashboardChallenges.textContent = userData.completedChallenges.length;
+            if (dashboardRecycled) dashboardRecycled.textContent = userData.totalRecycled.toFixed(1);
+            if (totalRecycled) totalRecycled.textContent = userData.totalRecycled.toFixed(1);
+
+            // Update recent activity
+            const activityContainer = document.getElementById('recentActivity');
+            if (activityContainer) {
+                const activityHTML = userData.recentActivity.length > 0 ? 
+                    userData.recentActivity.slice(0, 5).map(activity => `
+                        <div style="padding: 0.5rem; border-bottom: 1px solid #eee;">
+                            <strong>${activity.message}</strong>
+                            <br>
+                            <small style="color: #666;">${activity.date} • ${activity.points > 0 ? '+' : ''}${activity.points} points</small>
+                        </div>
+                    `).join('') : 
+                    '<p>Belum ada aktivitas. Mulai dengan menghitung jejak karbon atau mengikuti challenge!</p>';
+                
+                activityContainer.innerHTML = activityHTML;
+            }
+
+            console.log('UI updated successfully');
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, ready for login...');
+            // Check if user is already logged in
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('navbar').style.display = 'block';
+                document.getElementById('mainContainer').style.display = 'block';
+                loadUserData();
+                updateUserUI();
+            }
+        });
+
+        // Global error handler
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+        });
+    </script>
+</body>
+</html>
